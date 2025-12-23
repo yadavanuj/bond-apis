@@ -13,19 +13,6 @@ class DirectionEnum(str, Enum):
     INTERNAL = "INTERNAL"
     EXTERNAL = "EXTERNAL"
 
-class SensitivityEnum(str, Enum):
-    INTERNAL = "INTERNAL"
-    PII = "PII"
-    PCI = "PCI"
-    CONFIDENTIAL = "CONFIDENTIAL"
-
-class ActionEnum(str, Enum):
-    BLOCK = "BLOCK"
-    MASK = "MASK"
-    REDACT = "REDACT"
-    LOG = "LOG"
-    ALERT = "ALERT"
-
 class TypeCategoryEnum(str, Enum):
     PII = "PII"
     PCI = "PCI"
@@ -33,12 +20,6 @@ class TypeCategoryEnum(str, Enum):
     IDENTIFIER = "IDENTIFIER"
     TOKEN = "TOKEN"
     CUSTOM = "CUSTOM"
-
-class CharsetEnum(str, Enum):
-    ALPHA = "ALPHA"
-    DIGIT = "DIGIT"
-    ALNUM = "ALNUM"
-    ANY = "ANY"
 
 class SegmentTypeEnum(str, Enum):
     ALPHA = "ALPHA"
@@ -119,21 +100,21 @@ class WorkflowUpdate(BaseModel):
 class FieldModel(BaseModel):
     field_id: str
     type: str
-    sensitivity: SensitivityEnum
-    maps_to_entity: Optional[str] = None
+    sensitivity: str
+    maps_to_type: Optional[str] = None
     notes: Optional[str] = None
 
 class FieldCreate(BaseModel):
     field_id: str
     type: str
-    sensitivity: SensitivityEnum
-    maps_to_entity: Optional[str] = None
+    sensitivity: str
+    maps_to_type: Optional[str] = None
     notes: Optional[str] = None
 
 class FieldUpdate(BaseModel):
     type: Optional[str] = None
-    sensitivity: Optional[SensitivityEnum] = None
-    maps_to_entity: Optional[str] = None
+    sensitivity: Optional[str] = None
+    maps_to_type: Optional[str] = None
     notes: Optional[str] = None
 
 # DataModel Model
@@ -197,7 +178,7 @@ class Policy(BaseModel):
     description: Optional[str] = None
     applies_to: Optional[AppliesTo] = None
     rule: Rule
-    action: ActionEnum
+    action: str
     version: Optional[int] = None
     status: StatusEnum = StatusEnum.DRAFT
 
@@ -207,7 +188,7 @@ class PolicyCreate(BaseModel):
     description: Optional[str] = None
     applies_to: Optional[AppliesTo] = None
     rule: Rule
-    action: ActionEnum
+    action: str
     version: Optional[int] = None
     status: StatusEnum = StatusEnum.DRAFT
 
@@ -215,7 +196,7 @@ class PolicyUpdate(BaseModel):
     description: Optional[str] = None
     applies_to: Optional[AppliesTo] = None
     rule: Optional[Rule] = None
-    action: Optional[ActionEnum] = None
+    action: Optional[str] = None
     version: Optional[int] = None
     status: Optional[StatusEnum] = None
 
@@ -234,7 +215,7 @@ class Composition(BaseModel):
 
 class Validation(BaseModel):
     length: Optional[LengthConstraint] = None
-    charset: Optional[CharsetEnum] = None
+    charset: Optional[str] = None
     regex: Optional[List[str]] = None
     checksum: Optional[str] = None
     composition: Optional[Composition] = None
@@ -264,3 +245,21 @@ class TypeRegistryUpdate(BaseModel):
     validation: Optional[Validation] = None
     version: Optional[int] = PydanticField(ge=1, default=None)
     status: Optional[TypeStatusEnum] = None
+
+# Dynamic Registries
+class SensitivityRegistry(BaseModel):
+    sensitivity_id: str
+    description: Optional[str] = None
+
+class ActionRegistry(BaseModel):
+    action_id: str
+    description: Optional[str] = None
+
+class OperatorRegistry(BaseModel):
+    operator_id: str
+    description: Optional[str] = None
+
+class CharsetRegistry(BaseModel):
+    charset_id: str
+    description: Optional[str] = None
+    characters: Optional[str] = None

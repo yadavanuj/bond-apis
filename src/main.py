@@ -1,12 +1,14 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from .database import connect_to_mongo, close_mongo_connection
-from .routes import tenant, project, workflow, data_model, fields, relationship, policy, type_registry
+from .database import connect_to_mongo, close_mongo_connection, get_database
+from .routes import tenant, project, workflow, data_model, fields, relationship, policy, type_registry, registries
+from .cache import RegistryCache
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await connect_to_mongo()
+    await RegistryCache.initialize(get_database())
     yield
     await close_mongo_connection()
 
@@ -30,6 +32,7 @@ app.include_router(fields, prefix="/fields", tags=["fields"])
 app.include_router(relationship, prefix="/relationships", tags=["relationships"])
 app.include_router(policy, prefix="/policies", tags=["policies"])
 app.include_router(type_registry, prefix="/types", tags=["types"])
+app.include_router(registries, prefix="/admin", tags=["registries"])
 
 @app.get("/")
 async def root():
