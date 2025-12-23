@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .database import connect_to_mongo, close_mongo_connection
-from .routes import tenant, project, workflow, data_model, fields, relationship, policy
+from .routes import tenant, project, workflow, data_model, fields, relationship, policy, type_registry
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,6 +29,7 @@ app.include_router(data_model, prefix="/data-models", tags=["data-models"])
 app.include_router(fields, prefix="/fields", tags=["fields"])
 app.include_router(relationship, prefix="/relationships", tags=["relationships"])
 app.include_router(policy, prefix="/policies", tags=["policies"])
+app.include_router(type_registry, prefix="/types", tags=["types"])
 
 @app.get("/")
 async def root():

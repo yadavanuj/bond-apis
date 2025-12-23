@@ -26,6 +26,28 @@ class ActionEnum(str, Enum):
     LOG = "LOG"
     ALERT = "ALERT"
 
+class TypeCategoryEnum(str, Enum):
+    PII = "PII"
+    PCI = "PCI"
+    CREDENTIAL = "CREDENTIAL"
+    IDENTIFIER = "IDENTIFIER"
+    TOKEN = "TOKEN"
+    CUSTOM = "CUSTOM"
+
+class CharsetEnum(str, Enum):
+    ALPHA = "ALPHA"
+    DIGIT = "DIGIT"
+    ALNUM = "ALNUM"
+    ANY = "ANY"
+
+class SegmentTypeEnum(str, Enum):
+    ALPHA = "ALPHA"
+    DIGIT = "DIGIT"
+
+class TypeStatusEnum(str, Enum):
+    ACTIVE = "ACTIVE"
+    DEPRECATED = "DEPRECATED"
+
 # Tenant Model
 class Tenant(BaseModel):
     tenant_id: str
@@ -196,3 +218,49 @@ class PolicyUpdate(BaseModel):
     action: Optional[ActionEnum] = None
     version: Optional[int] = None
     status: Optional[StatusEnum] = None
+
+# Type Registry Model
+class LengthConstraint(BaseModel):
+    exact: Optional[int] = None
+    min: Optional[int] = None
+    max: Optional[int] = None
+
+class Segment(BaseModel):
+    type: Optional[SegmentTypeEnum] = None
+    length: Optional[int] = None
+
+class Composition(BaseModel):
+    segments: Optional[List[Segment]] = None
+
+class Validation(BaseModel):
+    length: Optional[LengthConstraint] = None
+    charset: Optional[CharsetEnum] = None
+    regex: Optional[List[str]] = None
+    checksum: Optional[str] = None
+    composition: Optional[Composition] = None
+
+class TypeRegistry(BaseModel):
+    type_id: str
+    name: str
+    category: TypeCategoryEnum
+    description: Optional[str] = None
+    validation: Validation
+    version: Optional[int] = 1
+    status: Optional[TypeStatusEnum] = TypeStatusEnum.ACTIVE
+
+class TypeRegistryCreate(BaseModel):
+    type_id: str
+    name: str
+    category: TypeCategoryEnum
+    description: Optional[str] = None
+    validation: Validation
+    version: Optional[int] = 1
+    status: Optional[TypeStatusEnum] = TypeStatusEnum.ACTIVE
+
+class TypeRegistryUpdate(BaseModel):
+    name: Optional[str] = None
+    category: Optional[TypeCategoryEnum] = None
+    description: Optional[str] = None
+    validation: Optional[Validation] = None
+    version: Optional[int] = PydanticField(ge=1, default=None)
+    status: Optional[TypeStatusEnum] = None

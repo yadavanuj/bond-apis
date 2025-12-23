@@ -1,0 +1,79 @@
+{
+  "$id": "type_registry.schema.json",
+  "type": "object",
+  "required": ["type_id", "name", "category", "validation"],
+  "properties": {
+    "type_id": {
+      "type": "string",
+      "description": "Globally unique type identifier (e.g., EMAIL, PAN)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable name"
+    },
+    "category": {
+      "enum": ["PII", "PCI", "CREDENTIAL", "IDENTIFIER", "TOKEN", "CUSTOM"]
+    },
+    "description": {
+      "type": "string"
+    },
+    "validation": {
+      "$ref": "#/$defs/validation"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": ["ACTIVE", "DEPRECATED"]
+    }
+  },
+  "$defs": {
+    "validation": {
+      "type": "object",
+      "properties": {
+        "length": {
+          "$ref": "#/$defs/length_constraint"
+        },
+        "charset": {
+          "enum": ["ALPHA", "DIGIT", "ALNUM", "ANY"]
+        },
+        "regex": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "checksum": {
+          "type": "string",
+          "description": "Optional checksum algorithm (e.g., LUHN)"
+        },
+        "composition": {
+          "$ref": "#/$defs/composition"
+        }
+      }
+    },
+    "length_constraint": {
+      "type": "object",
+      "properties": {
+        "exact": { "type": "integer" },
+        "min": { "type": "integer" },
+        "max": { "type": "integer" }
+      }
+    },
+    "composition": {
+      "type": "object",
+      "description": "Rules describing internal structure",
+      "properties": {
+        "segments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "enum": ["ALPHA", "DIGIT"] },
+              "length": { "type": "integer" }
+            }
+          }
+        }
+      }
+    }
+  }
+}
