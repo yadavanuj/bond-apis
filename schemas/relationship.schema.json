@@ -1,0 +1,12 @@
+{
+  "$id": "relationship.schema.json",
+  "type": "object",
+  "required": ["project_id", "from_model", "to_model", "type"],
+  "properties": {
+    "project_id": { "type": "string" },
+    "from_model": { "type": "string" },
+    "to_model": { "type": "string" },
+    "type": { "type": "string" },
+    "description": { "type": "string" }
+  }
+}

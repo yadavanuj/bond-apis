@@ -1,0 +1,12 @@
+{
+  "$id": "fields.schema.json",
+  "type": "object",
+  "required": ["field_id", "sensitivity"],
+  "properties": {
+    "field_id": { "type": "string" },
+    "type": { "type": "string" },
+    "sensitivity": { "enum": ["INTERNAL", "PII", "PCI", "CONFIDENTIAL"] },
+    "maps_to_entity": { "type": "string" },
+    "notes": { "type": "string" }
+  }
+}

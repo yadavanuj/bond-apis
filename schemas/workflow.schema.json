@@ -1,0 +1,23 @@
+{
+  "$id": "workflow.schema.json",
+  "type": "object",
+  "required": ["workflow_id", "project_id", "steps"],
+  "properties": {
+    "workflow_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "name": { "type": "string" },
+    "version": { "type": "integer" },
+    "status": { "enum": ["DRAFT", "ACTIVE"] },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["step_id", "direction"],
+        "properties": {
+          "step_id": { "type": "string" },
+          "direction": { "enum": ["INPUT", "INTERNAL", "EXTERNAL"] }
+        }
+      }
+    }
+  }
+}

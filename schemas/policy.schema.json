@@ -1,0 +1,29 @@
+{
+  "$id": "policy.schema.json",
+  "type": "object",
+  "required": ["policy_id", "project_id", "rule", "action"],
+  "properties": {
+    "policy_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "description": { "type": "string" },
+    "applies_to": {
+      "type": "object",
+      "properties": {
+        "workflow_id": { "type": "string" },
+        "step_id": { "type": "string" }
+      }
+    },
+    "rule": {
+      "type": "object",
+      "properties": {
+        "deny_if_sensitivity_in": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "action": { "enum": ["BLOCK", "MASK", "REDACT", "LOG", "ALERT"] },
+    "version": { "type": "integer" },
+    "status": { "enum": ["DRAFT", "ACTIVE"] }
+  }
+}

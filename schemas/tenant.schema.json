@@ -1,0 +1,10 @@
+{
+  "$id": "tenant.schema.json",
+  "type": "object",
+  "required": ["tenant_id", "name"],
+  "properties": {
+    "tenant_id": { "type": "string" },
+    "name": { "type": "string" },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}

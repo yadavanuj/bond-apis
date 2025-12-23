@@ -1,0 +1,33 @@
+{
+  "$id": "data_model.schema.json",
+  "type": "object",
+  "required": ["model_id", "project_id", "fields"],
+  "properties": {
+    "model_id": { "type": "string" },
+    "project_id": { "type": "string" },
+    "description": { "type": "string" },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "fields": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/field" }
+    },
+    "version": { "type": "integer" },
+    "status": { "enum": ["DRAFT", "ACTIVE"] }
+  },
+  "$defs": {
+    "field": {
+      "type": "object",
+      "required": ["field_id", "sensitivity"],
+      "properties": {
+        "field_id": { "type": "string" },
+        "type": { "type": "string" },
+        "sensitivity": { "enum": ["INTERNAL", "PII", "PCI", "CONFIDENTIAL"] },
+        "maps_to_entity": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}

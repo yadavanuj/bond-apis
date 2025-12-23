@@ -1,0 +1,15 @@
+{
+  "$id": "project.schema.json",
+  "type": "object",
+  "required": ["project_id", "tenant_id", "name", "domain"],
+  "properties": {
+    "project_id": { "type": "string" },
+    "tenant_id": { "type": "string" },
+    "name": { "type": "string" },
+    "domain": { "type": "string" },
+    "description": { "type": "string" },
+    "version": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["DRAFT", "ACTIVE", "DEPRECATED"] },
+    "created_at": { "type": "string", "format": "date-time" }
+  }
+}
