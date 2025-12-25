@@ -3,12 +3,15 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
 from ..models import Relationship, RelationshipCreate, RelationshipUpdate
 from ..database import get_database
+from datetime import datetime
 
 router = APIRouter()
 
 @router.post("/relationships", response_model=Relationship)
 async def create_relationship(relationship: RelationshipCreate, db: AsyncIOMotorDatabase = Depends(get_database)):
     relationship_dict = relationship.model_dump()
+    relationship_dict["created_at"] = datetime.utcnow()
+    relationship_dict["updated_at"] = datetime.utcnow()
     result = await db.relationships.insert_one(relationship_dict)
     relationship_dict["_id"] = result.inserted_id
     return Relationship(**relationship_dict)
@@ -32,6 +35,7 @@ async def update_relationship(relationship_id: str, relationship_update: Relatio
     update_data = {k: v for k, v in relationship_update.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
+    update_data["updated_at"] = datetime.utcnow()
     result = await db.relationships.update_one({"relationship_id": relationship_id}, {"$set": update_data})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Relationship not found")

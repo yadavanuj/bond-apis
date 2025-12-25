@@ -3,12 +3,15 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import List
 from ..models import Workflow, WorkflowCreate, WorkflowUpdate
 from ..database import get_database
+from datetime import datetime
 
 router = APIRouter()
 
 @router.post("/workflows", response_model=Workflow)
 async def create_workflow(workflow: WorkflowCreate, db: AsyncIOMotorDatabase = Depends(get_database)):
     workflow_dict = workflow.model_dump()
+    workflow_dict["created_at"] = datetime.utcnow()
+    workflow_dict["updated_at"] = datetime.utcnow()
     result = await db.workflows.insert_one(workflow_dict)
     workflow_dict["_id"] = result.inserted_id
     return Workflow(**workflow_dict)
@@ -32,7 +35,11 @@ async def update_workflow(workflow_id: str, workflow_update: WorkflowUpdate, db:
     update_data = {k: v for k, v in workflow_update.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = await db.workflows.update_one({"workflow_id": workflow_id}, {"$set": update_data})
+    
+    update_data["updated_at"] = datetime.utcnow()
+    update_data.pop("version", None)
+
+    result = await db.workflows.update_one({"workflow_id": workflow_id}, {"$set": update_data, "$inc": {"version": 1}})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Workflow not found")
     updated_workflow = await db.workflows.find_one({"workflow_id": workflow_id})

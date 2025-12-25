@@ -3,7 +3,7 @@ from motor.motor_asyncio import AsyncIOMotorDatabase
 class RegistryCache:
     sensitivities = set()
     actions = set()
-    operators = set()
+    policy_operators = set()
     charsets = set()
 
     @classmethod
@@ -14,7 +14,7 @@ class RegistryCache:
         # Clear existing
         cls.sensitivities.clear()
         cls.actions.clear()
-        cls.operators.clear()
+        cls.policy_operators.clear()
         cls.charsets.clear()
 
         async for doc in db.sensitivity_registry.find({}, {"sensitivity_id": 1}):
@@ -24,9 +24,9 @@ class RegistryCache:
             cls.actions.add(doc["action_id"])
             
         async for doc in db.operator_registry.find({}, {"operator_id": 1}):
-            cls.operators.add(doc["operator_id"])
+            cls.policy_operators.add(doc["operator_id"])
             
         async for doc in db.charset_registry.find({}, {"charset_id": 1}):
             cls.charsets.add(doc["charset_id"])
             
-        print(f"Cache Loaded: {len(cls.sensitivities)} Sensitivities, {len(cls.actions)} Actions, {len(cls.operators)} Operators, {len(cls.charsets)} Charsets")
+        print(f"Cache Loaded: {len(cls.sensitivities)} Sensitivities, {len(cls.actions)} Actions, {len(cls.policy_operators)} Policy Operators, {len(cls.charsets)} Charsets")

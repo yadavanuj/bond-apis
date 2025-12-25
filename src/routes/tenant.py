@@ -11,6 +11,7 @@ router = APIRouter()
 async def create_tenant(tenant: TenantCreate, db: AsyncIOMotorDatabase = Depends(get_database)):
     tenant_dict = tenant.model_dump()
     tenant_dict["created_at"] = datetime.utcnow()
+    tenant_dict["updated_at"] = datetime.utcnow()
     result = await db.tenants.insert_one(tenant_dict)
     tenant_dict["_id"] = result.inserted_id
     return Tenant(**tenant_dict)
@@ -34,6 +35,7 @@ async def update_tenant(tenant_id: str, tenant_update: TenantUpdate, db: AsyncIO
     update_data = {k: v for k, v in tenant_update.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
+    update_data["updated_at"] = datetime.utcnow()
     result = await db.tenants.update_one({"tenant_id": tenant_id}, {"$set": update_data})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Tenant not found")

@@ -11,6 +11,7 @@ router = APIRouter()
 async def create_project(project: ProjectCreate, db: AsyncIOMotorDatabase = Depends(get_database)):
     project_dict = project.model_dump()
     project_dict["created_at"] = datetime.utcnow()
+    project_dict["updated_at"] = datetime.utcnow()
     result = await db.projects.insert_one(project_dict)
     project_dict["_id"] = result.inserted_id
     return Project(**project_dict)
@@ -34,7 +35,12 @@ async def update_project(project_id: str, project_update: ProjectUpdate, db: Asy
     update_data = {k: v for k, v in project_update.model_dump().items() if v is not None}
     if not update_data:
         raise HTTPException(status_code=400, detail="No fields to update")
-    result = await db.projects.update_one({"project_id": project_id}, {"$set": update_data})
+    
+    update_data["updated_at"] = datetime.utcnow()
+    # Remove version from set if present to avoid conflict with inc, or just let inc handle it
+    update_data.pop("version", None)
+    
+    result = await db.projects.update_one({"project_id": project_id}, {"$set": update_data, "$inc": {"version": 1}})
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Project not found")
     updated_project = await db.projects.find_one({"project_id": project_id})

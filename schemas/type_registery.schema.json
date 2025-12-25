@@ -1,7 +1,7 @@
 {
   "$id": "type_registry.schema.json",
   "type": "object",
-  "required": ["type_id", "name", "category", "validation"],
+  "required": ["type_id", "name", "sensitivity", "validation"],
   "properties": {
     "type_id": {
       "type": "string",
@@ -11,8 +11,9 @@
       "type": "string",
       "description": "Human-readable name"
     },
-    "category": {
-      "enum": ["PII", "PCI", "CREDENTIAL", "IDENTIFIER", "TOKEN", "CUSTOM"]
+    "sensitivity": {
+      "type": "string",
+      "description": "Registry-backed sensitivity identifier"
     },
     "description": {
       "type": "string"
@@ -36,7 +37,8 @@
           "$ref": "#/$defs/length_constraint"
         },
         "charset": {
-          "enum": ["ALPHA", "DIGIT", "ALNUM", "ANY"]
+          "type": "string",
+          "description": "Reference to a CharsetRegistry ID"
         },
         "regex": {
           "type": "array",
@@ -63,13 +65,18 @@
       "type": "object",
       "description": "Rules describing internal structure",
       "properties": {
-        "segments": {
+        "structure": {
           "type": "array",
           "items": {
             "type": "object",
             "properties": {
-              "type": { "enum": ["ALPHA", "DIGIT"] },
-              "length": { "type": "integer" }
+              "charset_id": { "type": "string" },
+              "structural_info": {
+                "anyOf": [
+                  { "type": "object" },
+                  { "type": "array" }
+                ]
+              }
             }
           }
         }
