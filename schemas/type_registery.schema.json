@@ -21,6 +21,21 @@
     "validation": {
       "$ref": "#/$defs/validation"
     },
+    "keywords": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Lexical triggers/hints for scanning"
+    },
+    "aliases": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Semantic synonyms for mapping"
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Conceptual metadata labels"
+    },
     "version": {
       "type": "integer",
       "minimum": 1

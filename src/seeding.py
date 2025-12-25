@@ -29,91 +29,27 @@ from .models import (
     DataModel, FieldModel, FieldCreate, Relationship,
     Policy, Rule, Condition, AppliesTo,
     TypeRegistry, Validation, Structure, Composition, TypeStatusEnum,
-    SensitivityRegistry, ActionRegistry, PolicyOperatorRegistry,
-    CharsetRegistry
 )
 
 async def seed_hospital_data(db: AsyncIOMotorDatabase):
-    print("🏥 Starting Hospital Chatbot Onboarding...")
+    print("🏥 Starting Hospital Domain Seeding...")
 
     # ---------------------------------------------------------
-    # 1. Dynamic Registries (The Vocabulary)
+    # 1. Domain Specific Types
     # ---------------------------------------------------------
-    print("   ↳ Seeding Registries...")
-    
-    # Charsets
-    charsets = [
-        {"charset_id": "digit", "description": "Numeric digits 0-9", "characters": "0123456789"},
-        {"charset_id": "alpha", "description": "Alphabetic characters", "characters": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"},
-        {"charset_id": "alphanumeric", "description": "Alphanumeric", "characters": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"},
-        {"charset_id": "hex", "description": "Hexadecimal", "characters": "0123456789ABCDEFabcdef"},
-        {"charset_id": "any", "description": "Any character", "characters": None},
-    ]
-    for c in charsets:
-        await db.charset_registry.update_one({"charset_id": c["charset_id"]}, {"$set": c}, upsert=True)
+    print("   ↳ Seeding Hospital Types...")
 
-    # Sensitivities
-    sensitivities = [
-        {"sensitivity_id": "PHI", "description": "Protected Health Information (HIPAA)"},
-        {"sensitivity_id": "PII", "description": "Personally Identifiable Information"},
-        {"sensitivity_id": "CONFIDENTIAL", "description": "Business Confidential"},
-        {"sensitivity_id": "INTERNAL", "description": "Internal Use Only"},
-        {"sensitivity_id": "PUBLIC", "description": "Publicly Available"},
-    ]
-    for s in sensitivities:
-        await db.sensitivity_registry.update_one({"sensitivity_id": s["sensitivity_id"]}, {"$set": s}, upsert=True)
-
-    # Actions
-    actions = [
-        {"action_id": "BLOCK", "description": "Stop the workflow execution"},
-        {"action_id": "MASK", "description": "Replace characters with *"},
-        {"action_id": "REDACT", "description": "Remove the field entirely"},
-        {"action_id": "LOG", "description": "Log the access for audit"},
-    ]
-    for a in actions:
-        await db.action_registry.update_one({"action_id": a["action_id"]}, {"$set": a}, upsert=True)
-
-    # Operators
-    operators = [
-        {"operator_id": "equals", "description": "Exact match"},
-        {"operator_id": "contains", "description": "Substring match"},
-        {"operator_id": "sensitivity_in", "description": "Check if field sensitivity is in list"},
-        {"operator_id": "type_is", "description": "Check if field type matches"},
-    ]
-    for o in operators:
-        await db.operator_registry.update_one({"operator_id": o["operator_id"]}, {"$set": o}, upsert=True)
-
-    # ---------------------------------------------------------
-    # 2. Type Registry (The Dictionary)
-    # ---------------------------------------------------------
-    print("   ↳ Seeding Types...")
-    
     types = [
         TypeRegistry(
             type_id="PATIENT_ID",
             name="Patient Identifier",
             sensitivity="PHI",
             description="Hospital internal patient ID (e.g., PAT-12345678)",
+            keywords=["mrn", "patient_id"],
+            aliases=["medical_record_number", "patient_no"],
+            tags=["healthcare", "identity"],
             validation=Validation(
                 regex=["^PAT-\\d{8}$"]
-            )
-        ),
-        TypeRegistry(
-            type_id="SSN",
-            name="Social Security Number",
-            sensitivity="PII",
-            description="US Social Security Number",
-            validation=Validation(
-                regex=["^\\d{3}-\\d{2}-\\d{4}$"]
-            )
-        ),
-        TypeRegistry(
-            type_id="EMAIL",
-            name="Email Address",
-            sensitivity="PII",
-            description="Standard email format",
-            validation=Validation(
-                regex=["^[\\w\\.-]+@[\\w\\.-]+\\.\\w+$"]
             )
         ),
         TypeRegistry(
@@ -121,18 +57,11 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
             name="ICD-10 Code",
             sensitivity="PHI",
             description="International Classification of Diseases code",
+            keywords=["icd10", "diagnosis"],
+            aliases=["diagnosis_code", "icd_code"],
+            tags=["healthcare", "clinical"],
             validation=Validation(
                 regex=["^[A-Z]\\d{2}\\.\\d{1,2}$"]
-            )
-        ),
-        TypeRegistry(
-            type_id="CREDIT_CARD",
-            name="Credit Card Number",
-            sensitivity="CONFIDENTIAL",
-            description="Payment card number with Luhn check",
-            validation=Validation(
-                checksum="LUHN",
-                regex=["^\\d{16}$"]
             )
         ),
         TypeRegistry(
@@ -140,6 +69,9 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
             name="Insurance Policy ID",
             sensitivity="CONFIDENTIAL",
             description="Provider Code (3 chars) + Sequence (6 digits)",
+            keywords=["policy_id", "insurance_no"],
+            aliases=["insurance_policy_number", "member_id"],
+            tags=["healthcare", "financial", "insurance"],
             validation=Validation(
                 composition=Composition(
                     structure=[
@@ -158,9 +90,9 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
         await db.type_registry.update_one({"type_id": t.type_id}, {"$set": t_dict}, upsert=True)
 
     # ---------------------------------------------------------
-    # 3. Tenant & Project
+    # 2. Tenant & Project
     # ---------------------------------------------------------
-    print("   ↳ Seeding Tenant & Project...")
+    print("   ↳ Seeding Hospital Tenant & Project...")
     
     tenant = Tenant(
         tenant_id="acme-hospital",
@@ -183,18 +115,18 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
     await db.projects.update_one({"project_id": project.project_id}, {"$set": project.model_dump()}, upsert=True)
 
     # ---------------------------------------------------------
-    # 4. Data Models (The Schema)
+    # 3. Data Models (The Schema)
     # ---------------------------------------------------------
-    print("   ↳ Seeding Data Models...")
+    print("   ↳ Seeding Hospital Data Models...")
 
     # Patient Model
     patient_fields = [
-        FieldCreate(field_id="p_id", data_type="string", maps_to_type="PATIENT_ID", sensitivity="PHI", notes="Primary Key", scope="PROJECT", scope_id="hospital-support-bot"),
-        FieldCreate(field_id="p_dob", data_type="date", sensitivity="PHI", notes="Date of Birth", scope="PROJECT", scope_id="hospital-support-bot"),
-        FieldCreate(field_id="p_name", data_type="string", sensitivity="PHI", notes="Full Name", scope="PROJECT", scope_id="hospital-support-bot"),
-        FieldCreate(field_id="p_email", data_type="string", maps_to_type="EMAIL", sensitivity="PII", notes="Contact Email", scope="PROJECT", scope_id="hospital-support-bot"),
-        FieldCreate(field_id="p_ssn", data_type="string", maps_to_type="SSN", sensitivity="PII", notes="Government ID", scope="PROJECT", scope_id="hospital-support-bot"),
-        FieldCreate(field_id="p_insurance_id", data_type="string", maps_to_type="INSURANCE_ID", sensitivity="CONFIDENTIAL", notes="Insurance Policy Number", scope="PROJECT", scope_id="hospital-support-bot"),
+        FieldCreate(field_id="p_id", data_type="string", maps_to_type="PATIENT_ID", sensitivity="PHI", notes="Primary Key", scope="PROJECT", scope_id="hospital-support-bot", tags=["identifier", "phi"]),
+        FieldCreate(field_id="p_dob", data_type="date", sensitivity="PHI", notes="Date of Birth", scope="PROJECT", scope_id="hospital-support-bot", tags=["phi", "demographic"]),
+        FieldCreate(field_id="p_name", data_type="string", sensitivity="PHI", notes="Full Name", scope="PROJECT", scope_id="hospital-support-bot", tags=["phi", "demographic"]),
+        FieldCreate(field_id="p_email", data_type="string", maps_to_type="EMAIL", sensitivity="PII", notes="Contact Email", scope="PROJECT", scope_id="hospital-support-bot", tags=["pii", "contact"]),
+        FieldCreate(field_id="p_ssn", data_type="string", maps_to_type="SSN", sensitivity="PII", notes="Government ID", scope="PROJECT", scope_id="hospital-support-bot", tags=["pii", "government"]),
+        FieldCreate(field_id="p_insurance_id", data_type="string", maps_to_type="INSURANCE_ID", sensitivity="CONFIDENTIAL", notes="Insurance Policy Number", scope="PROJECT", scope_id="hospital-support-bot", tags=["financial", "insurance"]),
     ]
 
     patient_model = DataModel(
@@ -215,10 +147,10 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
 
     # Medical Record Model
     med_fields = [
-        FieldCreate(field_id="m_id", data_type="string", sensitivity="INTERNAL", notes="Record ID", scope="PROJECT", scope_id="hospital-support-bot"),
-        FieldCreate(field_id="m_pid", data_type="string", maps_to_type="PATIENT_ID", sensitivity="PHI", notes="Foreign Key", scope="PROJECT", scope_id="hospital-support-bot"),
-        FieldCreate(field_id="m_diag", data_type="string", maps_to_type="DIAGNOSIS_CODE", sensitivity="PHI", notes="ICD-10", scope="PROJECT", scope_id="hospital-support-bot"),
-        FieldCreate(field_id="m_notes", data_type="string", sensitivity="PHI", notes="Doctor Notes", scope="PROJECT", scope_id="hospital-support-bot"),
+        FieldCreate(field_id="m_id", data_type="string", sensitivity="INTERNAL", notes="Record ID", scope="PROJECT", scope_id="hospital-support-bot", tags=["identifier", "internal"]),
+        FieldCreate(field_id="m_pid", data_type="string", maps_to_type="PATIENT_ID", sensitivity="PHI", notes="Foreign Key", scope="PROJECT", scope_id="hospital-support-bot", tags=["phi", "reference"]),
+        FieldCreate(field_id="m_diag", data_type="string", maps_to_type="DIAGNOSIS_CODE", sensitivity="PHI", notes="ICD-10", scope="PROJECT", scope_id="hospital-support-bot", tags=["phi", "clinical"]),
+        FieldCreate(field_id="m_notes", data_type="string", sensitivity="PHI", notes="Doctor Notes", scope="PROJECT", scope_id="hospital-support-bot", tags=["phi", "unstructured"]),
     ]
 
     med_model = DataModel(
@@ -237,9 +169,9 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
     await db.data_models.update_one({"model_id": med_model.model_id}, {"$set": med_model.model_dump()}, upsert=True)
 
     # ---------------------------------------------------------
-    # 5. Relationships (The Knowledge Graph)
+    # 4. Relationships (The Knowledge Graph)
     # ---------------------------------------------------------
-    print("   ↳ Seeding Relationships...")
+    print("   ↳ Seeding Hospital Relationships...")
 
     rels = [
         Relationship(
@@ -249,6 +181,7 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
             to_model="medical_record",
             relationship_type="OWNS",
             description="Patient owns their medical records",
+            tags=["core", "ownership"],
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow()
         )
@@ -257,9 +190,9 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
         await db.relationships.update_one({"relationship_id": r.relationship_id}, {"$set": r.model_dump()}, upsert=True)
 
     # ---------------------------------------------------------
-    # 6. Workflow (The Process)
+    # 5. Workflow (The Process)
     # ---------------------------------------------------------
-    print("   ↳ Seeding Workflow...")
+    print("   ↳ Seeding Hospital Workflow...")
 
     workflow = Workflow(
         workflow_id="patient-support-flow",
@@ -278,9 +211,9 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
     await db.workflows.update_one({"workflow_id": workflow.workflow_id}, {"$set": workflow.model_dump()}, upsert=True)
 
     # ---------------------------------------------------------
-    # 7. Policies (The Guardrails)
+    # 6. Policies (The Guardrails)
     # ---------------------------------------------------------
-    print("   ↳ Seeding Policies...")
+    print("   ↳ Seeding Hospital Policies...")
 
     policies = [
         # Policy 1: Block PHI from going to External LLM

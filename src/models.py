@@ -119,6 +119,7 @@ class FieldModel(BaseModel):
     notes: Optional[str] = None
     scope: Literal["SYSTEM", "GLOBAL", "TENANT", "PROJECT"]
     scope_id: Optional[str] = None
+    tags: Optional[List[str]] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -130,6 +131,7 @@ class FieldCreate(BaseModel):
     notes: Optional[str] = None
     scope: Literal["SYSTEM", "GLOBAL", "TENANT", "PROJECT"]
     scope_id: Optional[str] = None
+    tags: Optional[List[str]] = None
 
 class FieldUpdate(BaseModel):
     data_type: Optional[str] = None
@@ -138,6 +140,7 @@ class FieldUpdate(BaseModel):
     notes: Optional[str] = None
     scope: Optional[Literal["SYSTEM", "GLOBAL", "TENANT", "PROJECT"]] = None
     scope_id: Optional[str] = None
+    tags: Optional[List[str]] = None
 
 # DataModel Model
 # Represents a schema, table, or object definition.
@@ -179,6 +182,7 @@ class Relationship(BaseModel):
     to_model: str
     relationship_type: str
     description: Optional[str] = None
+    tags: Optional[List[str]] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 
@@ -189,10 +193,12 @@ class RelationshipCreate(BaseModel):
     to_model: str
     relationship_type: str
     description: Optional[str] = None
+    tags: Optional[List[str]] = None
 
 class RelationshipUpdate(BaseModel):
     relationship_type: Optional[str] = None
     description: Optional[str] = None
+    tags: Optional[List[str]] = None
 
 # Policy Model
 # Defines governance rules (Authorization, Privacy, Quality).
@@ -285,6 +291,9 @@ class TypeRegistry(BaseModel):
     sensitivity: str
     description: Optional[str] = None
     validation: Validation
+    keywords: Optional[List[str]] = None
+    aliases: Optional[List[str]] = None
+    tags: Optional[List[str]] = None
     version: int = PydanticField(default=1, ge=1)
     status: Optional[TypeStatusEnum] = TypeStatusEnum.ACTIVE
     created_at: Optional[datetime] = None
@@ -296,6 +305,9 @@ class TypeRegistryCreate(BaseModel):
     sensitivity: str
     description: Optional[str] = None
     validation: Validation
+    keywords: Optional[List[str]] = None
+    aliases: Optional[List[str]] = None
+    tags: Optional[List[str]] = None
     version: int = PydanticField(default=1, ge=1)
     status: Optional[TypeStatusEnum] = TypeStatusEnum.ACTIVE
 
@@ -304,6 +316,9 @@ class TypeRegistryUpdate(BaseModel):
     sensitivity: Optional[str] = None
     description: Optional[str] = None
     validation: Optional[Validation] = None
+    keywords: Optional[List[str]] = None
+    aliases: Optional[List[str]] = None
+    tags: Optional[List[str]] = None
     version: Optional[int] = PydanticField(ge=1, default=None)
     status: Optional[TypeStatusEnum] = None
 
