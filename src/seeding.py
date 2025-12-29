@@ -22,7 +22,7 @@ This module seeds the Bond Platform with a realistic configuration for a Hospita
    - This graph allows us to trace data lineage and assess blast radius if a record is exposed.
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from .models import (
     Tenant, Project, Workflow, Step, DirectionEnum, StatusEnum,
@@ -85,7 +85,8 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
 
     for t in types:
         t_dict = t.model_dump()
-        t_dict["updated_at"] = datetime.utcnow()
+        t_dict["created_at"] = datetime.now(timezone.utc)
+        t_dict["updated_at"] = datetime.now(timezone.utc)
         # Upsert based on type_id
         await db.type_registry.update_one({"type_id": t.type_id}, {"$set": t_dict}, upsert=True)
 
@@ -97,8 +98,8 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
     tenant = Tenant(
         tenant_id="acme-hospital",
         name="Acme General Hospital",
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
     )
     await db.tenants.update_one({"tenant_id": tenant.tenant_id}, {"$set": tenant.model_dump()}, upsert=True)
 
@@ -109,8 +110,8 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
         domain="HEALTHCARE",
         description="AI Chatbot for patient queries and lab reports",
         status=StatusEnum.ACTIVE,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
     )
     await db.projects.update_one({"project_id": project.project_id}, {"$set": project.model_dump()}, upsert=True)
 
@@ -136,12 +137,12 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
         tags=["core", "phi"],
         fields=[
             # For seeding, we construct the full FieldModel objects
-            FieldModel(**f.model_dump(), created_at=datetime.utcnow(), updated_at=datetime.utcnow())
+            FieldModel(**f.model_dump(), created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc))
             for f in patient_fields
         ],
         status=StatusEnum.ACTIVE,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
     )
     await db.data_models.update_one({"model_id": patient_model.model_id}, {"$set": patient_model.model_dump()}, upsert=True)
 
@@ -159,12 +160,12 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
         description="Clinical records and diagnosis",
         tags=["clinical", "phi"],
         fields=[
-            FieldModel(**f.model_dump(), created_at=datetime.utcnow(), updated_at=datetime.utcnow())
+            FieldModel(**f.model_dump(), created_at=datetime.now(timezone.utc), updated_at=datetime.now(timezone.utc))
             for f in med_fields
         ],
         status=StatusEnum.ACTIVE,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
     )
     await db.data_models.update_one({"model_id": med_model.model_id}, {"$set": med_model.model_dump()}, upsert=True)
 
@@ -182,8 +183,8 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
             relationship_type="OWNS",
             description="Patient owns their medical records",
             tags=["core", "ownership"],
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
     ]
     for r in rels:
@@ -205,8 +206,8 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
             Step(step_id="STEP_3_LLM_PROCESS", direction=DirectionEnum.EXTERNAL),
             Step(step_id="STEP_4_RESPONSE", direction=DirectionEnum.EXTERNAL),
         ],
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        created_at=datetime.now(timezone.utc),
+        updated_at=datetime.now(timezone.utc)
     )
     await db.workflows.update_one({"workflow_id": workflow.workflow_id}, {"$set": workflow.model_dump()}, upsert=True)
 
@@ -229,8 +230,8 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
             ),
             action="BLOCK",
             status=StatusEnum.ACTIVE,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         ),
         # Policy 2: Mask PII for External LLM
         Policy(
@@ -245,8 +246,8 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
             ),
             action="MASK",
             status=StatusEnum.ACTIVE,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         ),
         # Policy 3: Allow PHI for Internal Fetch
         Policy(
@@ -261,8 +262,8 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
             ),
             action="LOG", # Log access but allow it (implicit allow if not blocked)
             status=StatusEnum.ACTIVE,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         ),
         # Policy 4: Block Insurance IDs specifically (demonstrating type-based rule)
         Policy(
@@ -277,8 +278,8 @@ async def seed_hospital_data(db: AsyncIOMotorDatabase):
             ),
             action="BLOCK",
             status=StatusEnum.ACTIVE,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone.utc),
+            updated_at=datetime.now(timezone.utc)
         )
     ]
 

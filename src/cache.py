@@ -1,10 +1,12 @@
 from motor.motor_asyncio import AsyncIOMotorDatabase
+from typing import Dict
 
 class RegistryCache:
     sensitivities = set()
     actions = set()
     policy_operators = set()
     charsets = set()
+    types: Dict[str, str] = {}  # type_id -> sensitivity
 
     @classmethod
     async def initialize(cls, db: AsyncIOMotorDatabase):
@@ -16,6 +18,7 @@ class RegistryCache:
         cls.actions.clear()
         cls.policy_operators.clear()
         cls.charsets.clear()
+        cls.types.clear()
 
         async for doc in db.sensitivity_registry.find({}, {"sensitivity_id": 1}):
             cls.sensitivities.add(doc["sensitivity_id"])
@@ -28,5 +31,8 @@ class RegistryCache:
             
         async for doc in db.charset_registry.find({}, {"charset_id": 1}):
             cls.charsets.add(doc["charset_id"])
+
+        async for doc in db.type_registry.find({}, {"type_id": 1, "sensitivity": 1}):
+            cls.types[doc["type_id"]] = doc.get("sensitivity", "INTERNAL")
             
-        print(f"Cache Loaded: {len(cls.sensitivities)} Sensitivities, {len(cls.actions)} Actions, {len(cls.policy_operators)} Policy Operators, {len(cls.charsets)} Charsets")
+        print(f"Cache Loaded: {len(cls.sensitivities)} Sensitivities, {len(cls.actions)} Actions, {len(cls.policy_operators)} Policy Operators, {len(cls.charsets)} Charsets, {len(cls.types)} Types")

@@ -17,7 +17,7 @@ db = Database()
 async def connect_to_mongo():
     """Connect to MongoDB"""
     try:
-        db.client = AsyncIOMotorClient(MONGO_URI)
+        db.client = AsyncIOMotorClient(MONGO_URI, tz_aware=True)
         db.database = db.client[MONGO_DB_NAME]
         # Test the connection
         await db.client.admin.command('ping')
@@ -35,3 +35,30 @@ async def close_mongo_connection():
 def get_database():
     """Get database instance"""
     return db.database
+
+async def create_collection_indexes():
+    """
+    Enforce uniqueness constraints at the database level.
+    This prevents duplicate IDs and ensures data integrity.
+    """
+    if not db.database:
+        return
+
+    constraints = [
+        ("tenants", "tenant_id"),
+        ("projects", "project_id"),
+        ("workflows", "workflow_id"),
+        ("data_models", "model_id"),
+        ("relationships", "relationship_id"),
+        ("policies", "policy_id"),
+        ("type_registry", "type_id"),
+        ("sensitivity_registry", "sensitivity_id"),
+        ("action_registry", "action_id"),
+        ("operator_registry", "operator_id"),
+        ("charset_registry", "charset_id"),
+    ]
+
+    for col_name, field in constraints:
+        # Create unique index to prevent duplicates
+        await db.database[col_name].create_index(field, unique=True)
+        print(f"Ensured unique index on {col_name}.{field}")

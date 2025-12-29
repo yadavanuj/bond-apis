@@ -7,7 +7,7 @@ It includes:
 - Common Types (SSN, EMAIL, CREDIT_CARD)
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from .models import (
     TypeRegistry, Validation,
@@ -32,6 +32,8 @@ async def seed_generic_data(db: AsyncIOMotorDatabase):
         {"charset_id": "any", "description": "Any character", "characters": None},
     ]
     for c in charsets:
+        c["created_at"] = datetime.now(timezone.utc)
+        c["updated_at"] = datetime.now(timezone.utc)
         await db.charset_registry.update_one({"charset_id": c["charset_id"]}, {"$set": c}, upsert=True)
 
     # Sensitivities
@@ -43,6 +45,8 @@ async def seed_generic_data(db: AsyncIOMotorDatabase):
         {"sensitivity_id": "PUBLIC", "description": "Publicly Available"},
     ]
     for s in sensitivities:
+        s["created_at"] = datetime.now(timezone.utc)
+        s["updated_at"] = datetime.now(timezone.utc)
         await db.sensitivity_registry.update_one({"sensitivity_id": s["sensitivity_id"]}, {"$set": s}, upsert=True)
 
     # Actions
@@ -53,6 +57,8 @@ async def seed_generic_data(db: AsyncIOMotorDatabase):
         {"action_id": "LOG", "description": "Log the access for audit"},
     ]
     for a in actions:
+        a["created_at"] = datetime.now(timezone.utc)
+        a["updated_at"] = datetime.now(timezone.utc)
         await db.action_registry.update_one({"action_id": a["action_id"]}, {"$set": a}, upsert=True)
 
     # Operators
@@ -63,6 +69,8 @@ async def seed_generic_data(db: AsyncIOMotorDatabase):
         {"operator_id": "type_is", "description": "Check if field type matches"},
     ]
     for o in operators:
+        o["created_at"] = datetime.now(timezone.utc)
+        o["updated_at"] = datetime.now(timezone.utc)
         await db.operator_registry.update_one({"operator_id": o["operator_id"]}, {"$set": o}, upsert=True)
 
     # ---------------------------------------------------------
@@ -112,7 +120,8 @@ async def seed_generic_data(db: AsyncIOMotorDatabase):
 
     for t in types:
         t_dict = t.model_dump()
-        t_dict["updated_at"] = datetime.utcnow()
+        t_dict["created_at"] = datetime.now(timezone.utc)
+        t_dict["updated_at"] = datetime.now(timezone.utc)
         # Upsert based on type_id
         await db.type_registry.update_one({"type_id": t.type_id}, {"$set": t_dict}, upsert=True)
 
