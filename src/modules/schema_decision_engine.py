@@ -40,6 +40,25 @@ SENSITIVITY_RANK = {
     "PUBLIC": 0
 }
 
+# Module-level constants for reuse
+ID_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]{1,63}$")
+RESERVED_KEYWORDS = {
+    "null", "none", "true", "false", "undefined", "void", "nan", "inf", "default"
+}
+
+def validate_identifier_string(value: str) -> Optional[str]:
+    """
+    Validates a single identifier string against strict compiler rules.
+    Returns an error message if invalid, or None if valid.
+    """
+    if not value:
+        return "Identifier cannot be empty"
+    if value.lower() in RESERVED_KEYWORDS:
+        return f"'{value}' is a reserved keyword and cannot be used as an identifier"
+    if not ID_PATTERN.match(value):
+        return "Identifier must start with a letter and contain only alphanumeric chars, underscores, or hyphens"
+    return None
+
 class DiagnosticSeverity(str, Enum):
     INFO = "INFO"
     WARNING = "WARNING"
@@ -158,19 +177,14 @@ async def lexical_validation_middleware(ctx: SchemaContext) -> SchemaContext:
     Enforces strict naming conventions and regex patterns on identifiers.
     Rule: ^[a-zA-Z][a-zA-Z0-9_-]{1,63}$
     """
-    ID_PATTERN = re.compile(r"^[a-zA-Z][a-zA-Z0-9_-]{1,63}$")
     
     def check_id(entity_name: str, field_name: str, value: str):
-        if not value:
-            ctx.add_error(f"{field_name} cannot be empty", "EMPTY_IDENTIFIER", entity_name, field_name, value)
-        elif not ID_PATTERN.match(value):
-            ctx.add_error(
-                f"{field_name} must start with a letter and contain only alphanumeric chars, underscores, or hyphens",
-                "INVALID_IDENTIFIER_FORMAT",
-                entity_name,
-                field_name,
-                value
-            )
+        error = validate_identifier_string(value)
+        if error:
+            code = "EMPTY_IDENTIFIER" if "empty" in error else \
+                   "RESERVED_KEYWORD" if "reserved" in error else \
+                   "INVALID_IDENTIFIER_FORMAT"
+            ctx.add_error(error, code, entity_name, field_name, value)
 
     schema = ctx.schema
     entity_type = type(schema).__name__

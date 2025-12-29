@@ -14,7 +14,8 @@ from .models import (
 from .modules.schema_decision_engine import (
     SchemaDecisionEngine, SchemaContext,
     lexical_validation_middleware, symbol_resolution_middleware,
-    structural_validation_middleware, semantic_validation_middleware, evolution_validation_middleware
+    structural_validation_middleware, semantic_validation_middleware, evolution_validation_middleware,
+    validate_identifier_string
 )
 
 @asynccontextmanager
@@ -39,6 +40,32 @@ app.add_middleware(
 # Schema Decision Engine Middleware
 @app.middleware("http")
 async def schema_enforcement_middleware(request: Request, call_next):
+    # Handle DELETE requests: Validate ID in path
+    if request.method == "DELETE":
+        # Extract the last segment of the path as the ID
+        # e.g., /relationships/relationships/%F3... -> %F3...
+        path_segments = request.url.path.strip("/").split("/")
+        if path_segments:
+            resource_id = path_segments[-1]
+            # Validate the ID against strict compiler rules
+            error = validate_identifier_string(resource_id)
+            if error:
+                return JSONResponse(
+                    status_code=400,
+                    content={
+                        "status": "error",
+                        "message": "Invalid Resource Identifier",
+                        "diagnostics": [{
+                            "severity": "ERROR",
+                            "code": "INVALID_URL_IDENTIFIER",
+                            "entity": "URL",
+                            "field": "path_parameter",
+                            "value": resource_id,
+                            "message": error
+                        }]
+                    }
+                )
+
     if request.method in ["POST", "PUT"]:
         path = request.url.path
         model_cls = None

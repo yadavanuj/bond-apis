@@ -1,5 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo.errors import ConnectionFailure
+from pymongo.errors import ConnectionFailure, DuplicateKeyError, OperationFailure
 import os
 from dotenv import load_dotenv
 
@@ -41,7 +41,7 @@ async def create_collection_indexes():
     Enforce uniqueness constraints at the database level.
     This prevents duplicate IDs and ensures data integrity.
     """
-    if not db.database:
+    if db.database is None:
         return
 
     constraints = [
@@ -59,6 +59,10 @@ async def create_collection_indexes():
     ]
 
     for col_name, field in constraints:
-        # Create unique index to prevent duplicates
-        await db.database[col_name].create_index(field, unique=True)
-        print(f"Ensured unique index on {col_name}.{field}")
+        try:
+            # Create unique index to prevent duplicates
+            await db.database[col_name].create_index(field, unique=True)
+            print(f"Ensured unique index on {col_name}.{field}")
+        except (DuplicateKeyError, OperationFailure) as e:
+            print(f"⚠️ Failed to create unique index on {col_name}.{field}: {e}")
+            print(f"   ↳ HINT: Run 'python -m src.cleanup' to remove duplicate/invalid records.")
